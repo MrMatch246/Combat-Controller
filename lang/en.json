@@ -1,0 +1,86 @@
+{
+  "combatController": {
+    "noToken": "Combat Controller: select one of your tokens, or let the gamemaster assign you a character that has a token on this scene.",
+    "settings": {
+      "bindings": {
+        "name": "Sticks and buttons",
+        "label": "Configure gamepad",
+        "hint": "Which stick and button of your gamepad is used for what. The defaults fit a standard gamepad."
+      },
+      "hints": {
+        "name": "Button hints",
+        "hint": "A bar at the top of the screen shows what the buttons do while the gamepad controls the combat hud, a menu or a dialog."
+      },
+      "turn_rumble": {
+        "name": "Rumble on your turn",
+        "hint": "The gamepad rumbles when the turn of your token starts."
+      },
+      "turn_open": {
+        "name": "Combat hud on your turn",
+        "hint": "Opens the hud of Argon for the gamepad when the turn of your token starts, and leaves it when the turn ends."
+      },
+      "token_speed": {
+        "name": "Token speed",
+        "hint": "How fast your token walks while the stick is held, in grid spaces per second. Foundry itself moves tokens with 6."
+      }
+    },
+    "bindingsApp": {
+      "title": "Combat Controller: sticks and buttons",
+      "info": "Click detect and use the stick or button on your gamepad, or type in its number. Nothing in the game reacts to the gamepad while a detection is running.",
+      "detect": "detect",
+      "reversed": "reversed",
+      "reset": "Back to the defaults",
+      "pressButton": "Press the button on the gamepad that you want to use.",
+      "pushRight": "Push the stick that you want to use to the right.",
+      "pushDown": "Pull the stick that you want to use towards you.",
+      "release": "Got it, now let go.",
+      "timeout": "Combat Controller: nothing detected. Press a button on the gamepad first so the browser sees it."
+    },
+    "bindings": {
+      "move-horizontal": "Left stick, left / right: walk, focus",
+      "move-vertical": "Left stick, up / down: walk, focus",
+      "pan-horizontal": "Right stick, left / right: pan the map",
+      "pan-vertical": "Right stick, up / down: pan the map",
+      "ok": "Use, confirm, target",
+      "back": "Back, cancel",
+      "menu": "Token menu / enough targets",
+      "switch": "Switch to your next token",
+      "loadout": "Next weapon set / zoom out / turn area",
+      "jump": "Hold + d-pad: jump, undo step. Hold + stick: precise movement / zoom in / turn area",
+      "disadvantage": "Hold while using: ctrl-click, disadvantage",
+      "advantage": "Hold while using: alt-click, advantage / door",
+      "toggle": "Open and hide the combat hud",
+      "start": "Roll initiative / end turn",
+      "drawer": "Saves and skills",
+      "center": "Center the map on your token",
+      "up": "Up",
+      "down": "Down",
+      "left": "Left",
+      "right": "Right"
+    },
+    "hints": {
+      "stick": "move",
+      "dpad": "move",
+      "pan": "map",
+      "dialog": { "stick": "field / value", "ok": "confirm", "back": "close", "toggle": "let go" },
+      "menu": { "ok": "press", "back": "back", "menu": "close" },
+      "plan": { "stick": "destination", "ok": "walk there", "back": "cancel" },
+      "place": { "stick": "move area", "ok": "place", "back": "cancel", "loadout": "turn left", "jump": "turn right" },
+      "target": { "stick": "next token", "ok": "target", "menu": "enough", "back": "cancel", "loadout": "zoom out", "jump": "zoom in" },
+      "hud": {
+        "ok": "use",
+        "back": "back",
+        "menu": "token menu",
+        "switch": "next token",
+        "loadout": "weapon set",
+        "jump": "+ ←→ jump, ↑↓ undo / redo, + stick precise move",
+        "advantage": "+ A advantage",
+        "disadvantage": "+ A disadvantage",
+        "drawer": "saves, skills",
+        "endTurn": "end turn",
+        "initiative": "roll initiative",
+        "toggle": "hide"
+      }
+    }
+  }
+}

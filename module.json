@@ -1,0 +1,43 @@
+{
+  "title": "{{title}}",
+  "description": "{{description}}",
+  "id": "{{name}}",
+  "version": "{{version}}",
+  "authors": [
+    {
+      "name": "MrMatch246",
+      "url": "https://github.com/MrMatch246"
+    }
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    }
+  ],
+  "esmodules": "{{sources}}",
+  "styles": "{{css}}",
+  "relationships": {
+    "requires": [
+      {
+        "id": "enhancedcombathud",
+        "type": "module"
+      }
+    ],
+    "recommends": [
+      {
+        "id": "physical-dice-rolls",
+        "type": "module"
+      },
+      {
+        "id": "rsreforged",
+        "type": "module"
+      }
+    ]
+  },
+  "compatibility": {
+    "minimum": "14",
+    "verified": "14"
+  }
+}

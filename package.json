@@ -1,0 +1,37 @@
+{
+  "name": "combat-controller",
+  "title": "Combat Controller",
+  "version": "0.1.0",
+  "description": "Fight with a gamepad: moves your token and controls Argon - Combat HUD, targets, areas, the token menu and dialogs",
+  "devDir": "/Users/daniel/Library/Application Support/FoundryVTT/Data/modules",
+  "type": "module",
+  "main": "src/main.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "build": "node build.mjs build",
+    "watch": "node build.mjs watch",
+    "clean": "node build.mjs clean",
+    "devbuild": "node build.mjs dev",
+    "devwatch": "node build.mjs devwatch",
+    "release": "node build.mjs zip",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\""
+  },
+  "prettier": {
+    "tabWidth": 2,
+    "semi": true,
+    "quoteProps": "consistent",
+    "trailingComma": "all",
+    "printWidth": 120
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "archiver": "^7.0.1",
+    "esbuild": "^0.25.1",
+    "prettier": "^3.8.1",
+    "typescript": "^5.9.3",
+    "vitest": "^2"
+  },
+  "packageManager": "pnpm@10.33.0"
+}

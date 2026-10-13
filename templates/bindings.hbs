@@ -1,0 +1,25 @@
+<div class="bindings-body">
+    <p class="hint">{{localize "combatController.bindingsApp.info"}}</p>
+    {{#if prompt}}<p class="capture-prompt">{{prompt}}</p>{{/if}}
+    {{#each rows as |row|}}
+        <div class="form-group binding {{#if row.listening}}listening{{/if}}">
+            <label>{{row.label}}</label>
+            <div class="form-fields">
+                {{#if row.standard}}<span class="standard">{{row.standard}}</span>{{/if}}
+                <input type="number" class="binding-index" min="0" step="1" value="{{row.index}}" data-kind="{{row.kind}}" data-name="{{row.name}}">
+                {{#if row.isAxis}}
+                    <label class="checkbox">
+                        <input type="checkbox" {{checked row.reversed}} data-kind="{{row.kind}}" data-name="{{row.name}}">
+                        {{localize "combatController.bindingsApp.reversed"}}
+                    </label>
+                {{/if}}
+                <button type="button" class="detect" data-action="detect" data-kind="{{row.kind}}" data-name="{{row.name}}">
+                    {{localize "combatController.bindingsApp.detect"}}
+                </button>
+            </div>
+        </div>
+    {{/each}}
+    <footer class="form-footer">
+        <button type="button" data-action="reset"><i class="fa-solid fa-rotate-left"></i> {{localize "combatController.bindingsApp.reset"}}</button>
+    </footer>
+</div>
