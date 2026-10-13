@@ -71,19 +71,52 @@ export class PlacementControl {
   /** places the shape like a left click. */
   confirm() {
     const pointer = this.pointer;
-    if (!pointer || !isPlacing()) return;
+    const placement = context();
+    if (!pointer || !placement) return;
     // once more, so the shape is where the pointer is and nowhere else when it is placed
     this.tellFoundry();
-    // The shape is where foundry was told the mouse is. The click itself is given to the placement alone: a real
-    // click on the map would also select what is below it.
+    const shape = placement.shape;
+    // The click is given to the placement alone at first: a real click on the map is also seen by everything else
+    // that listens to the map.
     const position = canvas.canvasCoordinatesFromClient(pointer);
-    canvas.stage.emit("pointerdown", {
+    try {
+      canvas.stage.emit("pointerdown", {
+        button: 0,
+        shiftKey: false,
+        x: pointer.x,
+        y: pointer.y,
+        getLocalPosition: () => ({ x: position.x, y: position.y }),
+      });
+    } catch (e) {
+      console.warn("combat-controller | the placement did not take the click", e);
+    }
+    // Foundry goes on to the next shape or ends the placement right away. When neither happened the click did not
+    // arrive, then the map gets a click like the mouse would send it.
+    const now = context();
+    if (now && now === placement && now.shape === shape) {
+      console.warn("combat-controller | placement still waiting after the click, clicking the map instead");
+      this.click();
+    }
+  }
+
+  /** a left click on the map where the pointer is, as pointer events like the mouse sends them. */
+  private click() {
+    const pointer = this.pointer;
+    const events = canvas.app?.renderer?.events;
+    const view: HTMLElement | undefined = events?.domElement ?? canvas.app?.view;
+    if (!pointer || !view) return;
+    const init: PointerEventInit = {
+      pointerId: events?.rootPointerEvent?.pointerId ?? 1,
+      pointerType: "mouse",
+      isPrimary: true,
+      bubbles: true,
+      cancelable: true,
       button: 0,
-      shiftKey: false,
-      x: pointer.x,
-      y: pointer.y,
-      getLocalPosition: () => ({ x: position.x, y: position.y }),
-    });
+      clientX: pointer.x,
+      clientY: pointer.y,
+    };
+    view.dispatchEvent(new PointerEvent("pointerdown", { ...init, buttons: 1 }));
+    view.dispatchEvent(new PointerEvent("pointerup", init));
   }
 
   cancel() {
