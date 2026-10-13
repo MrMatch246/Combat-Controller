@@ -63,9 +63,9 @@ export class PlacementControl {
     this.moveBy(direction.x * step, direction.y * step);
   }
 
-  /** turns the shape like the mouse wheel does, in steps of 15 degrees. */
+  /** turns the shape like the mouse wheel does without shift: in steps of 5 degrees, the finest foundry has. */
   rotate(step: number) {
-    if (isPlacing()) canvas.regions._onMouseWheel({ delta: step, shiftKey: true });
+    if (isPlacing()) canvas.regions._onMouseWheel({ delta: step, shiftKey: false });
   }
 
   /** places the shape like a left click. */
