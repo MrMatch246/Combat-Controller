@@ -7,5 +7,6 @@ export const HINTS = "hints";
 export const TURN_RUMBLE = "turn_rumble";
 export const TURN_OPEN = "turn_open";
 export const TOKEN_SPEED = "token_speed";
+export const FREE_WALK = "free_walk";
 
 export const setting = (key: string): any => game.settings.get(ID, key);

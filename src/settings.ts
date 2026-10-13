@@ -1,6 +1,6 @@
 import { BindingsApp } from "./apps/BindingsApp";
 import { withStored, type Bindings } from "./bindings";
-import { BINDINGS, HINTS, ID, TOKEN_SPEED, TURN_OPEN, TURN_RUMBLE } from "./definitions";
+import { BINDINGS, FREE_WALK, HINTS, ID, TOKEN_SPEED, TURN_OPEN, TURN_RUMBLE } from "./definitions";
 
 export function registerSettings() {
   game.settings.register(ID, BINDINGS, {
@@ -23,6 +23,7 @@ export function registerSettings() {
     [HINTS, true],
     [TURN_RUMBLE, true],
     [TURN_OPEN, false],
+    [FREE_WALK, true],
   ] as const) {
     game.settings.register(ID, key, {
       name: `combatController.settings.${key}.name`,

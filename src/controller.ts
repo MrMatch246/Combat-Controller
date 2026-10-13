@@ -2,14 +2,24 @@ import { buttonName, type Bindings } from "./bindings";
 import { readAxis, type Point } from "./core/axes";
 import { PressTracker, Repeater } from "./core/input";
 import { dominantDirection, nextInDirection } from "./core/spatial";
-import { HINTS, TURN_OPEN, TURN_RUMBLE, setting } from "./definitions";
+import { FREE_WALK, HINTS, TURN_OPEN, TURN_RUMBLE, setting } from "./definitions";
 import { DialogControl, topDialog } from "./dialogs";
 import { HintBar, type Hint } from "./hints";
-import { Walker, stepToken } from "./movement";
+import { Walker } from "./movement";
 import { MovementPlan } from "./planning";
 import { getBindings } from "./settings";
+import { SheetControl } from "./sheet";
 import { TokenMenuControl } from "./tokenMenu";
-import { centerOn, currentToken, ownTokens, redoStep, switchToken, toggleDoorInFront, undoStep } from "./tokens";
+import {
+  centerOn,
+  currentToken,
+  flipToken,
+  ownTokens,
+  redoStep,
+  switchToken,
+  toggleDoorInFront,
+  undoStep,
+} from "./tokens";
 import {
   HudFocus,
   argonHud,
@@ -44,6 +54,8 @@ const TICK_TIMEOUT = 300;
 const STICK_THRESHOLD = 0.5;
 // how far the stick has to be pushed with the modifier to start planning a movement
 const PLAN_THRESHOLD = 0.3;
+// how far the stick has to be pushed to walk the token freely
+const GLIDE_THRESHOLD = 0.2;
 const FALLBACK_COLOR = "#ff6400";
 
 const DPAD: { [name: string]: Point } = {
@@ -63,14 +75,16 @@ const DPAD: { [name: string]: Point } = {
  * |---------------------------|-------------------|----------------|---------------------|----------|--------|-----------|---------------------------------|-----------------|----------|----------|
  * | 1. a dialog               | field, value      | press, confirm | close dialog        |          |        |           |                                 |                 | let go   |          |
  * | 2. the token menu         | focus             | press          | leave palette, menu | close it |        |           |                                 |                 |          |          |
+ * | 2b. the sheet             | tab, entry        | expand, press  | collapse, close     |          |        |           |                                 |                 |          |          |
  * | 3. an area is placed      | move the area     | place          | cancel              |          |        | turn left | turn right                      |                 |          |          |
  * | 4. argon asks for targets | ring on a token   | target         | cancel              | enough   |        | zoom out  | zoom in                         |                 |          |          |
  * | 5. a movement is planned  | move destination  | walk there     | drop it             |          |        |           |                                 |                 |          |          |
  * | 6. the hud is controlled  | d-pad only: focus | use            | close, hide hud     | menu     | switch | next set  | + d-pad jump, undo. + stick plan | held: alt, ctrl | hide hud | start    |
- * | 7. nothing of that        | walk              |                |                     | menu     | switch | zoom out  | zoom in, + up/down undo         | RT: door        | open hud | start    |
+ * | 7. nothing of that        | walk              |                |                     | menu     | switch | zoom out  | zoom in, + up/down undo         | door, flip      | open hud | start    |
  *
- * The token only walks in line 7. Line 3 to 5 only come up while the hud is controlled. Line 1 and 2 also come up
- * from line 7, the token walks again when they are done.
+ * The token only walks in line 7, with the stick: the d-pad does not walk it. Line 3 to 5 only come up while the hud
+ * is controlled. Line 1 and 2 also come up from line 7, the token walks again when they are done. Line 2b comes up
+ * from line 7 with up on the d-pad.
  *
  * Line 5 starts in line 6 with the modifier and the left stick: the stick moves a destination freely, not from grid
  * space to grid space, and foundry shows its ruler from the token to there the way it does while a token is dragged
@@ -102,6 +116,7 @@ export class Controller {
   private view = new ViewControl();
   private dialogs = new DialogControl();
   private menu = new TokenMenuControl();
+  private sheet = new SheetControl();
   private placement = new PlacementControl();
   private hints = new HintBar();
   // the components the hud had before it was asked to show another actor
@@ -176,18 +191,29 @@ export class Controller {
     }
     const token = currentToken();
     if (direction) {
-      // the d-pad walks step by step, with the modifier it takes steps back
+      // The d-pad does not walk: with the modifier it takes steps back, up opens the sheet of the token.
       if (held.includes("jump")) {
         if (direction.y !== 0) this._undo(direction.y);
-      } else if (token) {
-        stepToken(token, direction).catch(console.error);
+      } else if (token?.actor && direction.y < 0) {
+        this.active = true;
+        this.zooms = false;
+        this.walker.release();
+        this.sheet.open(token);
+        return;
       }
     }
-    if (token && this._walkDirection(gamepad)) {
-      this.walker.hold(token, () => {
-        const pad = navigator.getGamepads()[gamepad.index];
-        return pad && !this.active ? this._walkDirection(pad) : undefined;
-      });
+    // the stick walks the token freely like it pans the map, or from grid space to grid space
+    const free = !!setting(FREE_WALK);
+    const walk = (pad: Gamepad) => (free ? this._glideDirection(pad) : this._walkDirection(pad));
+    if (token && walk(gamepad)) {
+      this.walker.hold(
+        token,
+        () => {
+          const pad = navigator.getGamepads()[gamepad.index];
+          return pad && !this.active ? walk(pad) : undefined;
+        },
+        free,
+      );
     } else {
       this.walker.release();
     }
@@ -213,6 +239,9 @@ export class Controller {
           break;
         case "advantage":
           if (token) toggleDoorInFront(token).catch(console.error);
+          break;
+        case "disadvantage":
+          if (token) flipToken(token).catch(console.error);
           break;
       }
       // whatever got opened has the gamepad now
@@ -258,7 +287,17 @@ export class Controller {
       return;
     }
 
-    // the gamepad was only taken for a dialog or the token menu, which is gone
+    // 2b. the sheet of the token
+    if (this.sheet.sync(color)) {
+      this.focus.pause();
+      if (direction) this.sheet.move(direction);
+      if (pressed.includes("ok")) this.sheet.ok();
+      else if (pressed.includes("back")) this.sheet.back();
+      this._hint("sheet", ["stick", "ok", "back"], color);
+      return;
+    }
+
+    // the gamepad was only taken for a dialog, the token menu or the sheet, which is gone
     const hud = argonHud();
     if (!this.controlsHud || !token?.actor || !hud?._actor) {
       // or somebody closed the hud, or the token is gone
@@ -486,6 +525,7 @@ export class Controller {
     this.placement.stop();
     this.dialogs.clear();
     this.menu.close();
+    this.sheet.clear();
     this.hints.hide();
   }
 
@@ -648,6 +688,12 @@ export class Controller {
       y: Math.abs(stick.y) > STICK_THRESHOLD ? Math.sign(stick.y) : 0,
     };
     return direction.x === 0 && direction.y === 0 ? undefined : direction;
+  }
+
+  /** where the left stick walks the token to freely, the further it is pushed the faster. Undefined while it rests. */
+  private _glideDirection(gamepad: Gamepad): Point | undefined {
+    const stick = this._stick(gamepad);
+    return Math.hypot(stick.x, stick.y) > GLIDE_THRESHOLD ? stick : undefined;
   }
 
   /**

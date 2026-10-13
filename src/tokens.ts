@@ -97,6 +97,11 @@ export async function toggleDoorInFront(token: any): Promise<void> {
   await candidate.door.update({ ds: candidate.door.ds === CLOSED ? OPEN : CLOSED });
 }
 
+/** mirrors the image of the token, so it looks to the other side. */
+export async function flipToken(token: any): Promise<void> {
+  await token.document.update({ "texture.scaleX": -(token.document.texture?.scaleX ?? 1) });
+}
+
 // what the gamepad did with a token, per token id: where it came from step by step, and what was taken back
 const steps = new Map<string, Position[]>();
 const undone = new Map<string, Position[]>();
@@ -114,6 +119,25 @@ export function noteStep(token: any, from: Position) {
   undone.delete(token.id);
 }
 
+// The free walks of a token in a fight: foundry records every piece of one as a movement of its own.
+const glides = new Map<string, { first: string; last: string }[]>();
+
+/**
+ * Remembers a piece of a free walk, so the whole walk can be taken back at once.
+ * @param from where the token stood before the piece.
+ * @param starts this is the first piece of a walk.
+ */
+export function noteGlide(token: any, from: Position, starts: boolean) {
+  if (starts) noteStep(token, from);
+  const id = token.document._source._movementHistory?.at(-1)?.movementId;
+  if (!id) return;
+  const list = glides.get(token.id) ?? [];
+  const walk = starts ? undefined : list.at(-1);
+  if (walk) walk.last = id;
+  else list.push({ first: id, last: id });
+  glides.set(token.id, list.slice(-MAX_STEPS));
+}
+
 /**
  * Takes back the last step of a token. In a fight foundry records the movement of a token, taking a step back there
  * also gives back the movement it cost.
@@ -126,8 +150,14 @@ export async function undoStep(token: any): Promise<boolean> {
   const history: any[] = document._source._movementHistory ?? [];
   let moved = false;
   if (history.length) {
+    // a free walk goes back to where it started
+    const last = history.at(-1).movementId;
+    const walk = glides.get(token.id)?.at(-1);
+    const glided = !!walk && walk.last === last;
+    const movementId = walk && glided ? walk.first : last;
+    if (glided) glides.get(token.id)?.pop();
     try {
-      moved = await document.revertRecordedMovement(history.at(-1).movementId);
+      moved = await document.revertRecordedMovement(movementId);
     } catch (e) {
       console.warn("combat-controller | recorded movement can not be reverted", e);
     }

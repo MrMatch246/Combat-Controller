@@ -22,6 +22,10 @@
       "token_speed": {
         "name": "Token speed",
         "hint": "How fast your token walks while the stick is held, in grid spaces per second. Foundry itself moves tokens with 6."
+      },
+      "free_walk": {
+        "name": "Walk freely",
+        "hint": "The left stick walks your token freely, like the right stick pans the map: not bound to the grid, and slower when pushed a little. Turn this off to walk from grid space to grid space instead."
       }
     },
     "bindingsApp": {
@@ -47,7 +51,7 @@
       "switch": "Switch to your next token",
       "loadout": "Next weapon set / zoom out / turn area",
       "jump": "Hold + d-pad: jump, undo step. Hold + stick: precise movement / zoom in / turn area",
-      "disadvantage": "Hold while using: ctrl-click, disadvantage",
+      "disadvantage": "Hold while using: ctrl-click, disadvantage / flip token",
       "advantage": "Hold while using: alt-click, advantage / door",
       "toggle": "Open and hide the combat hud",
       "start": "Roll initiative / end turn",
@@ -64,6 +68,7 @@
       "pan": "map",
       "dialog": { "stick": "field / value", "ok": "confirm", "back": "close", "toggle": "let go" },
       "menu": { "ok": "press", "back": "back", "menu": "close" },
+      "sheet": { "stick": "←→ tab, ↑↓ entry", "ok": "expand", "back": "collapse / close" },
       "plan": { "stick": "destination", "ok": "walk there", "back": "cancel" },
       "place": { "stick": "move area", "ok": "place", "back": "cancel", "loadout": "turn left", "jump": "turn right" },
       "target": { "stick": "next token", "ok": "target", "menu": "enough", "back": "cancel", "loadout": "zoom out", "jump": "zoom in" },
