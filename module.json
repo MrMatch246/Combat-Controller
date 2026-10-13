@@ -3,6 +3,12 @@
   "description": "{{description}}",
   "id": "{{name}}",
   "version": "{{version}}",
+  "url": "https://github.com/MrMatch246/Combat-Controller",
+  "manifest": "https://github.com/MrMatch246/Combat-Controller/releases/latest/download/module.json",
+  "download": "https://github.com/MrMatch246/Combat-Controller/releases/download/v{{version}}/{{name}}.zip",
+  "readme": "https://github.com/MrMatch246/Combat-Controller/blob/main/README.md",
+  "changelog": "https://github.com/MrMatch246/Combat-Controller/blob/main/changelog.md",
+  "bugs": "https://github.com/MrMatch246/Combat-Controller/issues",
   "authors": [
     {
       "name": "MrMatch246",
