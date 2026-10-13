@@ -1,7 +1,7 @@
 {
   "name": "combat-controller",
   "title": "Combat Controller",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Fight with a gamepad: moves your token and controls Argon - Combat HUD, targets, areas, the token menu and dialogs",
   "type": "module",
   "main": "src/main.ts",

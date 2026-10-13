@@ -1,3 +1,12 @@
+# 1.2.0
+- fixed: the character sheet opened, but the gamepad could not switch its tabs or go through its entries.
+- character sheet: A expands an entry and collapses it again. What an expanded item can be used for is listed below it, A uses it that way.
+- character sheet: X prepares a spell or lets go of it, and puts an item on or off. RB + up / down changes the quantity of an item.
+- character sheet: Y puts the focus on the coins of your character. Left and right go from coin to coin, up and down add or take one, with RB ten. Y or B goes back to the entries.
+- character sheet: the journal of Tidy 5e Sheets, up and down go through its pages and A opens one.
+- undo and redo changed places: RB + down takes a step back, RB + up does it again.
+- dialogs: RB + up / down changes a number by 5, so the result of a real die is quickly set.
+
 # 1.1.0
 - the stick walks your token freely, not bound to the grid: pushed a little it walks slowly, in front of a wall it slides along it. The new setting "Walk freely" turns that off, the stick then walks from grid space to grid space as before.
 - the d-pad does not walk the token anymore. With RB it still takes steps back and does them again.

@@ -75,12 +75,12 @@ const DPAD: { [name: string]: Point } = {
  * |---------------------------|-------------------|----------------|---------------------|----------|--------|-----------|---------------------------------|-----------------|----------|----------|
  * | 1. a dialog               | field, value      | press, confirm | close dialog        |          |        |           |                                 |                 | let go   |          |
  * | 2. the token menu         | focus             | press          | leave palette, menu | close it |        |           |                                 |                 |          |          |
- * | 2b. the sheet             | tab, entry        | expand, press  | collapse, close     |          |        |           |                                 |                 |          |          |
+ * | 2b. the sheet             | tab, entry, coins | expand, use    | collapse, close     | prepare  | coins  |           | + up/down: quantity             |                 |          |          |
  * | 3. an area is placed      | move the area     | place          | cancel              |          |        | turn left | turn right                      |                 |          |          |
  * | 4. argon asks for targets | ring on a token   | target         | cancel              | enough   |        | zoom out  | zoom in                         |                 |          |          |
  * | 5. a movement is planned  | move destination  | walk there     | drop it             |          |        |           |                                 |                 |          |          |
  * | 6. the hud is controlled  | d-pad only: focus | use            | close, hide hud     | menu     | switch | next set  | + d-pad jump, undo. + stick plan | held: alt, ctrl | hide hud | start    |
- * | 7. nothing of that        | walk              |                |                     | menu     | switch | zoom out  | zoom in, + up/down undo         | door, flip      | open hud | start    |
+ * | 7. nothing of that        | walk              |                |                     | menu     | switch | zoom out  | zoom in, + down/up undo         | door, flip      | open hud | start    |
  *
  * The token only walks in line 7, with the stick: the d-pad does not walk it. Line 3 to 5 only come up while the hud
  * is controlled. Line 1 and 2 also come up from line 7, the token walks again when they are done. Line 2b comes up
@@ -263,7 +263,11 @@ export class Controller {
     // 1. a dialog asks something
     if (this.dialogs.sync(color)) {
       this.focus.pause();
-      if (direction) this.dialogs.move(direction, color);
+      if (direction) {
+        const modified = held.includes("jump");
+        if (modified) this._modified();
+        this.dialogs.move(direction, color, modified);
+      }
       if (pressed.includes("ok")) this.dialogs.ok();
       else if (pressed.includes("back")) this.dialogs.back();
       else if (pressed.includes("toggle") && !this.controlsHud) {
@@ -272,7 +276,7 @@ export class Controller {
         this._leave();
         return;
       }
-      this._hint("dialog", ["stick", "ok", "back", ...(this.controlsHud ? [] : ["toggle"])], color);
+      this._hint("dialog", ["stick", "ok", "back", "jump", ...(this.controlsHud ? [] : ["toggle"])], color);
       return;
     }
 
@@ -290,10 +294,16 @@ export class Controller {
     // 2b. the sheet of the token
     if (this.sheet.sync(color)) {
       this.focus.pause();
-      if (direction) this.sheet.move(direction);
+      if (direction) {
+        const modified = held.includes("jump");
+        if (modified) this._modified();
+        this.sheet.move(direction, modified);
+      }
       if (pressed.includes("ok")) this.sheet.ok();
       else if (pressed.includes("back")) this.sheet.back();
-      this._hint("sheet", ["stick", "ok", "back"], color);
+      else if (pressed.includes("menu")) this.sheet.alter();
+      else if (pressed.includes("switch")) this.sheet.toggleCoins();
+      this._hint("sheet", ["stick", "ok", "back", "menu", "switch", "jump"], color);
       return;
     }
 
@@ -591,7 +601,7 @@ export class Controller {
     const token = currentToken();
     if (!token || this.undoing) return;
     this.undoing = true;
-    (direction < 0 ? undoStep(token) : redoStep(token)).catch(console.error).finally(() => (this.undoing = false));
+    (direction > 0 ? undoStep(token) : redoStep(token)).catch(console.error).finally(() => (this.undoing = false));
   }
 
   /**

@@ -28,6 +28,9 @@ const CONFIRM_SELECTORS = [
   ".form-footer button",
 ];
 
+// how far the modifier changes a number with one step
+const JUMP = 5;
+
 /** the dialog that lies on top of all others. */
 export function topDialog(): HTMLElement | undefined {
   let top: HTMLElement | undefined;
@@ -78,12 +81,18 @@ export class DialogControl {
   /**
    * Up and down change the value of a number or a select, everything else moves the focus. Left and right reach
    * every field: where nothing lies in that direction they go on with the field before or after.
+   * @param modified the modifier is held: up and down change a number by 5, so the result of a die is quickly set.
    */
-  move(direction: Point, color: string) {
+  move(direction: Point, color: string, modified = false) {
     if (!this.dialog) return;
     const fields = this.fields(this.dialog);
     const field = fields[this.index];
-    if (field && direction.y !== 0 && step(field, direction.y)) return;
+    if (field && direction.y !== 0) {
+      const steps = modified && field instanceof HTMLInputElement ? JUMP : 1;
+      let stepped = false;
+      for (let i = 0; i < steps; i++) stepped = step(field, direction.y);
+      if (stepped) return;
+    }
     // a form is read line by line: left and right stay in the row, up and down may go to whatever is closest
     let next = nextInDirection(fields.map(rectOf), this.index, direction, direction.x !== 0);
     if (next < 0 && direction.x !== 0) {
