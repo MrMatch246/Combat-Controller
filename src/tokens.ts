@@ -21,7 +21,7 @@ export function currentToken(): any | undefined {
 
 /**
  * The tokens on the scene the player can switch between: its character first, then what else belongs to the
- * player, like a summoned creature or a familiar.
+ * player, like a familiar, and what those summoned.
  */
 export function ownTokens(): any[] {
   if (!canvas?.ready) return [];
@@ -32,6 +32,17 @@ export function ownTokens(): any[] {
   const named = tokens.filter(
     (token) => token.actor.uuid === character?.uuid || (token.actor.ownership?.[game.user.id] ?? 0) >= level,
   );
+  // What one of those summoned belongs to the player as well, whoever owns the actor that was summoned: dnd5e
+  // notes the item that summoned it.
+  const summoned = tokens.filter((token) => {
+    const origin = token.actor.flags?.dnd5e?.summon?.origin;
+    return (
+      typeof origin === "string" &&
+      !named.includes(token) &&
+      named.some((owner) => origin.startsWith(`${owner.actor.uuid}.`))
+    );
+  });
+  named.push(...summoned);
   const list = named.length ? named : game.user.isGM ? [] : tokens;
   const rank = (token: any) => (token.actor.uuid === character?.uuid ? 0 : 1);
   return list.sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name) || a.id.localeCompare(b.id));
