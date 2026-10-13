@@ -66,7 +66,7 @@
       "stick": "move",
       "dpad": "move",
       "pan": "map",
-      "dialog": { "stick": "field / value", "ok": "confirm", "back": "close", "toggle": "let go", "jump": "+ ↑↓ by 5" },
+      "dialog": { "stick": "field / value", "ok": "confirm", "back": "close", "toggle": "let go", "jump": "+ ↑↓ by 5 / option" },
       "menu": { "ok": "press", "back": "back", "menu": "close" },
       "sheet": {
         "stick": "←→ tab, ↑↓ entry / coins",

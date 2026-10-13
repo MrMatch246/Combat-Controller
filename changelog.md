@@ -1,3 +1,7 @@
+# 1.2.1
+- dialogs: up and down on the d-pad move the focus on from a selection instead of changing it, so every field of a dialog is reached with up and down. The left stick steps through the options of the selection, A goes on to its next option, and RB + up / down steps through them as well. Numbers are changed with up and down as before.
+- areas: an item that is used from the character sheet or with the mouse can place its area with the gamepad as well, B cancels the placement. Before the sheet kept the gamepad.
+
 # 1.2.0
 - fixed: the character sheet opened, but the gamepad could not switch its tabs or go through its entries.
 - character sheet: A expands an entry and collapses it again. What an expanded item can be used for is listed below it, A uses it that way.

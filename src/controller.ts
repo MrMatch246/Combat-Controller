@@ -82,8 +82,8 @@ const DPAD: { [name: string]: Point } = {
  * | 6. the hud is controlled  | d-pad only: focus | use            | close, hide hud     | menu     | switch | next set  | + d-pad jump, undo. + stick plan | held: alt, ctrl | hide hud | start    |
  * | 7. nothing of that        | walk              |                |                     | menu     | switch | zoom out  | zoom in, + down/up undo         | door, flip      | open hud | start    |
  *
- * The token only walks in line 7, with the stick: the d-pad does not walk it. Line 3 to 5 only come up while the hud
- * is controlled. Line 1 and 2 also come up from line 7, the token walks again when they are done. Line 2b comes up
+ * The token only walks in line 7, with the stick: the d-pad does not walk it. Line 4 and 5 only come up while the hud
+ * is controlled, line 3 whenever an area is placed: it wins over line 2 and 2b. Line 1 and 2 also come up from line 7, the token walks again when they are done. Line 2b comes up
  * from line 7 with up on the d-pad.
  *
  * Line 5 starts in line 6 with the modifier and the left stick: the stick moves a destination freely, not from grid
@@ -190,6 +190,13 @@ export class Controller {
       return;
     }
     const token = currentToken();
+    // an area is placed that was not asked for with the gamepad, e.g. with a click on the sheet
+    if (isPlacing() && token) {
+      this.active = true;
+      this.zooms = false;
+      this.walker.release();
+      return;
+    }
     if (direction) {
       // The d-pad does not walk: with the modifier it takes steps back, up opens the sheet of the token.
       if (held.includes("jump")) {
@@ -266,7 +273,7 @@ export class Controller {
       if (direction) {
         const modified = held.includes("jump");
         if (modified) this._modified();
-        this.dialogs.move(direction, color, modified);
+        this.dialogs.move(direction, color, modified, this.steersWithStick);
       }
       if (pressed.includes("ok")) this.dialogs.ok();
       else if (pressed.includes("back")) this.dialogs.back();
@@ -279,6 +286,24 @@ export class Controller {
       this._hint("dialog", ["stick", "ok", "back", "jump", ...(this.controlsHud ? [] : ["toggle"])], color);
       return;
     }
+
+    // 3. The area of what was used has to be placed on the map. That comes before the token menu and the sheet: an
+    // item that is used from the sheet asks for its area while the sheet is still open.
+    if (isPlacing() && token) {
+      this.focus.pause();
+      this.targets.clear();
+      this.placement.start(Number(this.gamepadIndex), token.center, (pad) => this._stick(pad));
+      // the d-pad moves the area by whole grid spaces, the stick moves it freely
+      if (direction && held.some((name) => DPAD[name])) this.placement.nudge(direction);
+      // turns once when pressed, then on and on while held
+      const turn = held.includes("jump") ? 1 : held.includes("loadout") ? -1 : 0;
+      if (this.turning.update(String(turn || ""), now)) this.placement.rotate(turn);
+      if (pressed.includes("ok")) this.placement.confirm();
+      else if (pressed.includes("back")) this.placement.cancel();
+      this._hint("place", ["stick", "ok", "back", "loadout", "jump", "pan"], color);
+      return;
+    }
+    this.placement.stop();
 
     // 2. the token menu
     if (this.menu.sync(color)) {
@@ -319,23 +344,6 @@ export class Controller {
       this._leave();
       return;
     }
-
-    // 3. the area of what was used has to be placed on the map
-    if (isPlacing()) {
-      this.focus.pause();
-      this.targets.clear();
-      this.placement.start(Number(this.gamepadIndex), token.center, (pad) => this._stick(pad));
-      // the d-pad moves the area by whole grid spaces, the stick moves it freely
-      if (direction && held.some((name) => DPAD[name])) this.placement.nudge(direction);
-      // turns once when pressed, then on and on while held
-      const turn = held.includes("jump") ? 1 : held.includes("loadout") ? -1 : 0;
-      if (this.turning.update(String(turn || ""), now)) this.placement.rotate(turn);
-      if (pressed.includes("ok")) this.placement.confirm();
-      else if (pressed.includes("back")) this.placement.cancel();
-      this._hint("place", ["stick", "ok", "back", "loadout", "jump", "pan"], color);
-      return;
-    }
-    this.placement.stop();
 
     // 4. argon waits for the targets of the item that was used
     if (isTargetPickerActive()) {

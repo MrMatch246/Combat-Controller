@@ -79,25 +79,29 @@ export class DialogControl {
   }
 
   /**
-   * Up and down change the value of a number or a select, everything else moves the focus. Left and right reach
-   * every field: where nothing lies in that direction they go on with the field before or after.
-   * @param modified the modifier is held: up and down change a number by 5, so the result of a die is quickly set.
+   * Up and down change the value of a number, everything else moves the focus: also on a select, dialogs list
+   * their selects one below the other. Left and right reach every field: where nothing lies in that direction they
+   * go on with the field before or after.
+   * @param modified the modifier is held: up and down change a number by 5, so the result of a die is quickly set,
+   * and step through the options of a select.
+   * @param stick the direction comes from the stick, not from the d-pad: up and down step through the options of a
+   * select, the d-pad is what moves the focus across it.
    */
-  move(direction: Point, color: string, modified = false) {
+  move(direction: Point, color: string, modified = false, stick = false) {
     if (!this.dialog) return;
     const fields = this.fields(this.dialog);
     const field = fields[this.index];
-    if (field && direction.y !== 0) {
-      const steps = modified && field instanceof HTMLInputElement ? JUMP : 1;
+    const isNumber = field instanceof HTMLInputElement;
+    if (field && direction.y !== 0 && (isNumber || modified || stick)) {
+      const steps = modified && isNumber ? JUMP : 1;
       let stepped = false;
       for (let i = 0; i < steps; i++) stepped = step(field, direction.y);
       if (stepped) return;
     }
     // a form is read line by line: left and right stay in the row, up and down may go to whatever is closest
     let next = nextInDirection(fields.map(rectOf), this.index, direction, direction.x !== 0);
-    if (next < 0 && direction.x !== 0) {
-      next = this.index + direction.x;
-    }
+    // where nothing is found in that direction the field before or after is next, so every field can be reached
+    if (next < 0) next = this.index + (direction.x || direction.y);
     if (fields[next]) {
       this.index = next;
       this.mark(fields[next], color);
@@ -105,12 +109,15 @@ export class DialogControl {
   }
 
   /**
-   * Presses the focused button. On a field that holds a value it confirms the dialog instead, like the enter key.
+   * Presses the focused button. A select goes on to its next option. On another field that holds a value it
+   * confirms the dialog instead, like the enter key.
    */
   ok() {
     const field = this.focus.element;
     if (!this.dialog || !field?.isConnected) return;
-    if (hasValue(field)) {
+    if (field instanceof HTMLSelectElement) {
+      cycle(field);
+    } else if (hasValue(field)) {
       const fields = this.fields(this.dialog);
       CONFIRM_SELECTORS.map((selector) => fields.find((candidate) => candidate.matches(selector)))
         .find((candidate) => candidate)
@@ -217,6 +224,19 @@ function step(field: HTMLElement, direction: number): boolean {
     return true;
   }
   return false;
+}
+
+/** the next option of a select, after the last one comes the first. */
+function cycle(field: HTMLSelectElement) {
+  const count = field.options.length;
+  for (let i = 1; i < count; i++) {
+    const index = (field.selectedIndex + i) % count;
+    if (!field.options[index].disabled) {
+      field.selectedIndex = index;
+      changed(field);
+      return;
+    }
+  }
 }
 
 function stepNative(field: HTMLInputElement, direction: number) {
